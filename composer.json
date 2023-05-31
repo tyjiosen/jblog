@@ -1,0 +1,21 @@
+{
+    "name": "jiosen/lib",
+    "description": "frequently-used",
+    "autoload": {
+        "psr-4": {
+            "Jiosen\\Lib\\": "src/"
+        },
+        "files": [
+            "src/helper.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "jiosen",
+            "email": "4631458@qq.com"
+        }
+    ],
+    "require": {
+        "php": "^7.0"
+    }
+}
