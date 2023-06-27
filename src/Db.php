@@ -44,6 +44,9 @@ class Db
 
     //最后的语句
     private $lastSql = '';
+
+    //绑定数据
+    private $bindVars = [];
     
 
     //配置
@@ -191,7 +194,29 @@ class Db
      */
     public function getLastSql()
     {
-        return $this->lastSql;
+        if('' == $this->lastSql){
+            return '';
+        }
+
+        $sql = $this->lastSql;
+
+        foreach ($this->bindVars as $key => $val) {
+            $value = strval(is_array($val) ? $val[0] : $val);
+            $type  = is_array($val) ? $val[1] : PDO::PARAM_STR;
+
+            if (21 == $type || PDO::PARAM_STR == $type) {
+                $value = '\'' . addslashes($value) . '\'';
+            } elseif (PDO::PARAM_INT == $type && '' === $value) {
+                $value = '0';
+            }
+
+            // 判断占位符
+            $sql = is_numeric($key) ?
+                substr_replace($sql, $value, strpos($sql, '?'), 1) :
+                substr_replace($sql, $value, strpos($sql, ':' . $key), strlen(':' . $key));
+        }
+
+        return rtrim($sql);
     }
 
     /**
@@ -279,10 +304,12 @@ class Db
 
         $insert = $replace ? 'REPLACE' : 'INSERT';
         $keys = implode(",",array_keys($data));
-        $values = "'" . implode("','",array_values($data)) . "'" ;
-        $sql = "{$insert} INTO {$this->table} ({$keys}) VALUES ($values)";
+        $values = "'" . implode("','",array_values(array_map(function($item){
+            return  str_replace(['\\','\''],['\\\\','\'\''],$item);
+        },$data))) . "'" ;
+        $this->lastSql = "{$insert} INTO {$this->table} ({$keys}) VALUES ($values)";
 
-        $res = $this->pdo->exec($sql);
+        $res = $this->pdo->exec($this->lastSql);
 
         if($getLastInsID){
             return $this->pdo->lastInsertId();
@@ -311,12 +338,14 @@ class Db
 
         foreach ($data as $v)
         {
-            $values[] = "('" . implode("','",array_values($v)) . "')";
+            $values[] = "('" . implode("','",array_values(array_map(function($item){
+                return  str_replace(['\\','\''],['\\\\','\'\''],$item);
+             },$v))) . "')";
         }
 
-        $sql = "{$insert} INTO {$this->table} ({$keys}) VALUES " . implode(",",array_values($values));
-
-        $res = $this->pdo->exec($sql);
+        $this->lastSql = "{$insert} INTO {$this->table} ({$keys}) VALUES " . implode(",",array_values($values));
+     
+        $res = $this->pdo->exec($this->lastSql);
 
         if($getLastInsID){
             return $this->pdo->lastInsertId();
@@ -357,10 +386,10 @@ class Db
 
         $set = implode(",",$set);
 
-        $sql = "UPDATE {$this->table} SET {$set} {$this->getWhereSql()}";
+        $this->lastSql = "UPDATE {$this->table} SET {$set} {$this->getWhereSql()}";
 
         try {
-            return $this->pdo->exec($sql);
+            return $this->pdo->exec($this->lastSql);
         }catch (PDOException $e) {
             return false;
         }
@@ -378,10 +407,10 @@ class Db
             return false;
         }
 
-        $sql = "DELETE FROM {$this->table} {$this->getWhereSql()}";
+        $this->lastSql = "DELETE FROM {$this->table} {$this->getWhereSql()}";
 
         try {
-            return $this->pdo->exec($sql);
+            return $this->pdo->exec($this->lastSql);
         }catch (PDOException $e) {
             return false;
         }
@@ -521,6 +550,7 @@ class Db
     {
         //echo $sql;
         $this->lastSql = $sql;
+        $this->bindVars = $vars;
 
         $this->PDOStatement = $this->pdo->prepare($sql);
 

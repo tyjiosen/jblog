@@ -9,6 +9,7 @@ use Jiosen\Lib\Http;
 use Jiosen\Lib\Request;
 use Jiosen\Lib\Upload;
 use Jiosen\Lib\Validate;
+use Jiosen\Lib\Video;
 
 // $captcha = new Captcha(['fontSize'=>50,'pixelNum'=>3,'bgImg'=>'D:\phpstudy_pro\WWW\captcha\bg\2.jpg','useZh'=>true,'math'=>false]);
 
@@ -104,6 +105,34 @@ header("Access-Control-Allow-Origin:*");
 // dump(Validate::mobile('13800138000'),Validate::mobile('19400138000'));
 // dump(Validate::idCard('440000200001011234'));
 
-dump(validate('mobile',123132),validate('mobile','15889932750'),validate('xx','15889932750'));
+// dump(validate('mobile',123132),validate('mobile','15889932750'),validate('xx','15889932750'));
 
 
+// function curl($url, $header = null, $data = null) {
+//     $con = curl_init((string)$url);
+//     curl_setopt($con, CURLOPT_HEADER, false);
+//     curl_setopt($con, CURLOPT_SSL_VERIFYPEER, false);
+//     curl_setopt($con, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($con, CURLOPT_FOLLOWLOCATION, 1);
+//     curl_setopt($con, CURLOPT_AUTOREFERER, 1);
+//     if (isset($header)) {
+//         curl_setopt($con, CURLOPT_HTTPHEADER, $header);
+//     }
+//     if (isset($data)) {
+//         curl_setopt($con, CURLOPT_POST, true);
+//         curl_setopt($con, CURLOPT_POSTFIELDS, $data);
+//     }
+//     curl_setopt($con, CURLOPT_TIMEOUT, 5000);
+//     $result = curl_exec($con);
+//     return $result;
+// }
+
+
+// $url = 'https://v.douyin.com/UaqKr8t/';
+
+// $url = 'https://v.douyin.com/UaqKr8t/';
+$url = 'https://video.weibo.com/show?fid=1034:4907124023558187';
+
+$video = new Video();
+// dump($video->watermark($url));
+dump($video->down($url,'4.mp4'));
